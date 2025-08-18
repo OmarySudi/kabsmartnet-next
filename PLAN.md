@@ -11,7 +11,7 @@ Website for Kab SmartNet Co Ltd, a company specializing in ICT and installation 
 ## Phase 1: Project Setup & Foundation
 - [x] Initialize Next.js project with Tailwind CSS
 - [x] Configure Tailwind with mobile-first breakpoints
-- [ ] Set up mobile-first responsive utilities
+- [x] Set up mobile-first responsive utilities
 - [ ] Create project folder structure
 - [ ] Implement mobile-first layout components
 - [ ] Set up responsive navigation (mobile menu first)
