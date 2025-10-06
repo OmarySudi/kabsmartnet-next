@@ -101,3 +101,9 @@
     padding-top: max(1rem, env(safe-area-inset-top));
   }
 }
+
+body.menu-open {
+  overflow: hidden
+}
+
+

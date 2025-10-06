@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState,useEffect,useCallback,useRef } from 'react';
 
 // Navigation menu items
 const navItems = [
@@ -14,10 +14,34 @@ const navItems = [
 
 export default function Navigation() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const menuButtonRef = useRef(null);
 
-    const toggleMobileMenu = () => {
-        setIsMobileMenuOpen(!isMobileMenuOpen);
-    };
+    const toggleMobileMenu = useCallback((e) => {
+            e?.preventDefault();
+            const newState = !isMobileMenuOpen;
+            setIsMobileMenuOpen(newState);
+            document.body.classList.toggle('menu-open', newState);
+
+            if(!newState && menuButtonRef.current){
+                menuButtonRef.current?.blur();
+            }
+        },[isMobileMenuOpen]);
+
+
+
+    useEffect(()=>{
+        const handleEscape = (e)=>{
+            if(e.key === 'Escape' && isMobileMenuOpen){
+                toggleMobileMenu();
+            }
+        };
+
+        document.addEventListener('keydown', handleEscape);
+
+        return () => {
+            document.removeEventListener('keydown', handleEscape);
+        };
+    },[isMobileMenuOpen,toggleMobileMenu]);
 
     return (
      <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
@@ -56,6 +80,15 @@ export default function Navigation() {
                 <div className="mobile-only">
                     <button 
                         onClick={toggleMobileMenu}
+                        ref={menuButtonRef}
+                        onBlur={() => {
+                            // Small delay to allow click events to process
+                            setTimeout(() => {
+                                if (isMobileMenuOpen) {
+                                    toggleMobileMenu();
+                                }
+                            }, 200);
+                        }}
                         className=" text-gray-700 hover:text-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded"
                         aria-label="Toggle menu"
                         aria-expanded = {isMobileMenuOpen}
@@ -75,14 +108,34 @@ export default function Navigation() {
             <div 
                 className={`
                     mobile-only
+                    fixed inset-x-0 top-16
                     bg-white
+                    shadow-lg
                     overflow-hidden
                     transition-all duration-300 ease-in-out
+                    z-50
                     ${isMobileMenuOpen ? 'max-h-96': 'max-h-0'}
                 `}
                 aria-hidden = {!isMobileMenuOpen}
             >
                 <div className = "px-4 py-2 pb-4 space-y-2">
+
+                    {/** close button */}
+                    {/* <button 
+                        onClick={toggleMobileMenu}
+                        className="
+                            w-full flex justify-end p-2
+                            text-gray-500 hover:text-gray-700
+                            focus:outline-none
+                        "
+                        aria-label="Close menu"
+                    >
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button> */}
+
+                    {/** menu items */}
                     {
                         navItems.map((item)=>(
                             <Link 
@@ -102,6 +155,20 @@ export default function Navigation() {
                     }
                 </div>
             </div>
+
+
+            {/*overlay */}
+            {isMobileMenuOpen && (
+                <div 
+                    className="
+                    fixed inset-0 bg-black/50
+                    z-40
+                    mobile-only
+                    "
+                    onClick={toggleMobileMenu}
+                    aria-hidden="true"
+                />
+            )}
 
         </nav>
      </header>
