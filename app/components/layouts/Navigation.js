@@ -20,6 +20,9 @@ export default function Navigation() {
     const lastMenuItemRef = useRef(null);
 
     const isKeyboardUser = useMemo(() => {
+        // Ensure this only runs on the client
+        if (typeof document === 'undefined') return false;
+
         return document.documentElement.getAttribute('data-focus-visible') === 'true' || 
                document.documentElement.classList.contains('focus-visible');
     }, []);
@@ -46,7 +49,7 @@ export default function Navigation() {
                         activeElement?.blur();
                     } else {
                         
-                        if (isKeyboardUser()) {
+                        if (isKeyboardUser) {
                             menuButtonRef.current?.focus();
                         } else {
                             menuButtonRef.current?.blur();
@@ -56,7 +59,7 @@ export default function Navigation() {
                 },10);
             }
 
-        },[isMobileMenuOpen]);
+        },[isMobileMenuOpen,isKeyboardUser]);
 
 
     useEffect(()=>{
