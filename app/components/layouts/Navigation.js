@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState,useEffect,useCallback,useRef } from 'react';
+import { useState,useEffect,useCallback,useRef,useMemo } from 'react';
 
 // Navigation menu items
 const navItems = [
@@ -15,33 +15,85 @@ const navItems = [
 export default function Navigation() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const menuButtonRef = useRef(null);
+    const menuRef = useRef(null);
+    const firstMenuItemRef = useRef(null);
+    const lastMenuItemRef = useRef(null);
+
+    const isKeyboardUser = useMemo(() => {
+        return document.documentElement.getAttribute('data-focus-visible') === 'true' || 
+               document.documentElement.classList.contains('focus-visible');
+    }, []);
 
     const toggleMobileMenu = useCallback((e) => {
             e?.preventDefault();
             const newState = !isMobileMenuOpen;
+
             setIsMobileMenuOpen(newState);
             document.body.classList.toggle('menu-open', newState);
 
-            if(!newState && menuButtonRef.current){
-                menuButtonRef.current?.blur();
+            if(!newState){
+                
+                const activeElement = document.activeElement;
+                const isFocusOnMenuItem = activeElement?.closest('#mobile-menu') && activeElement !== firstMenuItemRef.current;
+
+                setTimeout(()=>{
+
+                    if (activeElement === firstMenuItemRef.current) {
+                        // If closing from close button, blur to remove focus
+                        menuButtonRef.current?.blur();
+                    } else if (isFocusOnMenuItem) {
+                        // If closing from a menu item, blur without focusing the button
+                        activeElement?.blur();
+                    } else {
+                        
+                        if (isKeyboardUser()) {
+                            menuButtonRef.current?.focus();
+                        } else {
+                            menuButtonRef.current?.blur();
+                        }
+                    }
+
+                },10);
             }
+
         },[isMobileMenuOpen]);
 
 
-
     useEffect(()=>{
-        const handleEscape = (e)=>{
-            if(e.key === 'Escape' && isMobileMenuOpen){
-                toggleMobileMenu();
+        if(isMobileMenuOpen && menuRef.current){
+            //Focus the first menu item when menu open
+            firstMenuItemRef.current?.focus();
+
+            //Handle keyboard navigation
+            const handleKeydown = (e)=>{
+                if(e.key === 'Escape'){
+                    toggleMobileMenu(e)
+                }
+
+                //Handle tab key for focus trapping
+                if (e.key == 'Tab'){
+                    //If shift+Tab is pressed on first item, move focus to last item 
+                    if(e.shiftKey && document.activeElement == firstMenuItemRef.current){
+                        e.preventDefault();
+                        lastMenuItemRef.current?.focus();
+                       
+                    } 
+                    
+                    //If Tab is pressed on last item, move focus to first item
+                    else if(!e.shiftKey && document.activeElement === lastMenuItemRef.current){ 
+                        e.preventDefault();
+                        firstMenuItemRef.current?.focus();
+                    }
+                }
             }
-        };
 
-        document.addEventListener('keydown', handleEscape);
+            document.addEventListener('keydown', handleKeydown);
 
-        return () => {
-            document.removeEventListener('keydown', handleEscape);
-        };
+            return () => document.removeEventListener('keydown', handleKeydown);
+        }
+
     },[isMobileMenuOpen,toggleMobileMenu]);
+
 
     return (
      <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
@@ -79,16 +131,10 @@ export default function Navigation() {
                 {/* Mobile menu button*/}
                 <div className="mobile-only">
                     <button 
-                        onClick={toggleMobileMenu}
-                        ref={menuButtonRef}
-                        onBlur={() => {
-                            // Small delay to allow click events to process
-                            setTimeout(() => {
-                                if (isMobileMenuOpen) {
-                                    toggleMobileMenu();
-                                }
-                            }, 200);
+                        onClick={(e)=>{
+                            toggleMobileMenu(e);
                         }}
+                        ref={menuButtonRef}
                         className=" text-gray-700 hover:text-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded"
                         aria-label="Toggle menu"
                         aria-expanded = {isMobileMenuOpen}
@@ -106,6 +152,8 @@ export default function Navigation() {
 
             {/** Mobile Menu - Dropdown */}       
             <div 
+                ref={menuRef}
+                id="mobile-menu"
                 className={`
                     mobile-only
                     fixed inset-x-0 top-16
@@ -114,44 +162,51 @@ export default function Navigation() {
                     overflow-hidden
                     transition-all duration-300 ease-in-out
                     z-50
-                    ${isMobileMenuOpen ? 'max-h-96': 'max-h-0'}
+                    ${
+                    isMobileMenuOpen ? 'max-h-96': 'max-h-0'}
                 `}
-                aria-hidden = {!isMobileMenuOpen}
+                inert={!isMobileMenuOpen ? true : null}
             >
                 <div className = "px-4 py-2 pb-4 space-y-2">
 
                     {/** close button */}
-                    {/* <button 
+                    <button 
                         onClick={toggleMobileMenu}
+                        ref={firstMenuItemRef}
                         className="
                             w-full flex justify-end p-2
                             text-gray-500 hover:text-gray-700
-                            focus:outline-none
+                            focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full
+                            ${!isMobileMenuOpen ? 'sr-only' : ''}
                         "
                         aria-label="Close menu"
                     >
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                    </button> */}
+                    </button>
 
                     {/** menu items */}
                     {
-                        navItems.map((item)=>(
-                            <Link 
-                                href={item.href} 
-                                key={item.name}
-                                onClick={toggleMobileMenu}
-                                className="
-                                    block px-4 py-3
-                                  text-gray-700 hover:text-blue-600 
-                                  hover:bg-gray-50 rounded-lg
-                                    transition-colors
-                                "
-                            >
-                                {item.name}
-                            </Link>
-                        ))
+                        navItems.map((item)=>{
+                            const isLastItem = item.name === 'Contact';
+                            return (
+                                <Link 
+                                    href={item.href} 
+                                    key={item.name}
+                                    ref={isLastItem ? lastMenuItemRef : null}
+                                    onClick={toggleMobileMenu}
+                                    className="
+                                        block px-4 py-3
+                                    text-gray-700 hover:text-blue-600 
+                                    hover:bg-gray-50 rounded-lg
+                                        transition-colors
+                                    "
+                                >
+                                    {item.name}
+                                </Link>
+                            );
+                        })
                     }
                 </div>
             </div>
@@ -165,8 +220,11 @@ export default function Navigation() {
                     z-40
                     mobile-only
                     "
-                    onClick={toggleMobileMenu}
-                    aria-hidden="true"
+                    onClick={(e) => {
+                        toggleMobileMenu(e);
+                    }}
+
+                    role = "presentation"
                 />
             )}
 
