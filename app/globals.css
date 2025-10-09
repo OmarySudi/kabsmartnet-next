@@ -120,3 +120,30 @@ a:focus:not(:focus-visible) {
     outline: none;
     box-shadow: none;
 }
+
+
+/* Smooth focus transitions */
+.focus-transition {
+  transition: all 0.2s ease-in-out;
+  transition-property: box-shadow, transform, background-color, border-color;
+}
+
+/* Focus styles */
+.focus-transition:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); /* blue-500 with opacity */
+  transform: translateY(-1px);
+}
+
+/* For browsers that don't support :focus-visible */
+.focus-transition:focus:not(:focus-visible) {
+  box-shadow: none;
+  transform: none;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .focus-transition {
+    transition: none;
+  }
+}

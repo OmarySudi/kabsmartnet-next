@@ -138,7 +138,7 @@ export default function Navigation() {
                             toggleMobileMenu(e);
                         }}
                         ref={menuButtonRef}
-                        className=" text-gray-700 hover:text-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded"
+                        className="focus-transition text-gray-700 hover:text-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded"
                         aria-label="Toggle menu"
                         aria-expanded = {isMobileMenuOpen}
                     >
@@ -177,6 +177,7 @@ export default function Navigation() {
                         onClick={toggleMobileMenu}
                         ref={firstMenuItemRef}
                         className="
+                            focus-transition
                             w-full flex justify-end p-2
                             text-gray-500 hover:text-gray-700
                             focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full
@@ -200,7 +201,8 @@ export default function Navigation() {
                                     ref={isLastItem ? lastMenuItemRef : null}
                                     onClick={toggleMobileMenu}
                                     className="
-                                        block px-4 py-3
+                                    focus-transition
+                                    block px-4 py-3
                                     text-gray-700 hover:text-blue-600 
                                     hover:bg-gray-50 rounded-lg
                                         transition-colors
