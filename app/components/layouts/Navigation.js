@@ -4,15 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState,useEffect,useCallback,useRef,useMemo } from 'react';
 
-// Navigation menu items
-const navItems = [
-    { name: 'Home', href: '/' },
-    { name: 'Services', href: '/services' },
-    { name: 'About', href: '/about' },
-    { name: 'Contact', href: '/contact' },
-];
-
-export default function Navigation() {
+export default function Navigation({navItems}) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const menuButtonRef = useRef(null);
     const menuRef = useRef(null);
@@ -192,8 +184,8 @@ export default function Navigation() {
 
                     {/** menu items */}
                     {
-                        navItems.map((item)=>{
-                            const isLastItem = item.name === 'Contact';
+                        navItems.map((item,index,array)=>{
+                            const isLastItem = index === array.length - 1;
                             return (
                                 <Link 
                                     href={item.href} 
